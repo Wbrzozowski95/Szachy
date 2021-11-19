@@ -44,6 +44,9 @@ public class game implements Runnable{
                         if (B.getActive() == 'W') this.ActivetextField.setText("Biały");
                         else this.ActivetextField.setText("Czarny");
                         break;
+                    case 'C':
+                        B.send("S-Q");
+                        break;
                     case 'V':
                         play = false;
                         JOptionPane.showMessageDialog(null,"Wygrałeś");

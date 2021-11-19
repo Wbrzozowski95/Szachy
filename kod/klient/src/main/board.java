@@ -82,6 +82,10 @@ public class board extends JPanel {
         return  (char) data[c+1];
     }
 
+    public void send(String S) throws IOException {
+        this.OS.write(S.getBytes());
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

@@ -3,7 +3,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <signal.h>
-#include <string.h>
 #include <time.h>*/
 
 #include <stdio.h>
@@ -12,6 +11,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <string.h>
 #include "game_logic.h"
 
 #define SERVER_PORT 1234
@@ -61,7 +61,7 @@ void *ThreadBehavior(void *data)
     pthread_detach(pthread_self());
     struct players *P = (struct players *)data;
 
-    int x, y, A, K, CM = 1;
+    int x, y, A, K1, K2, CM = 1;
 
     char buff[3];
 
@@ -71,68 +71,59 @@ void *ThreadBehavior(void *data)
 
     printf("nowa gra\n");
 
-    K = game_send(P->addr1, G, 'W');
-    if (K < 1)
-    {
-        game_send(P->addr2, G, 'V');
-    }
-    else
-    {
-        K = game_send(P->addr2, G, 'B');
-        if (K < 1)
-            game_send(P->addr1, G, 'V');
-    }
+    K1 = game_send(P->addr1, G, 'W');
+    K2 = game_send(P->addr2, G, 'B');
 
-    while ((CM & 1) && (K > 0))
+    while ((CM & 1) && ((K1 > 0) && (K2 > 0)))
     {
-        K = game_send(P->addr2, G, 'S');
-        if (K > 0)
+        K2 = game_send(P->addr2, G, 'S');
+        if (!(K2 > 0))
+            break;
+        K1 = game_send(P->addr1, G, 'S');
+        if (!(K1 > 0))
+            break;
+        do
         {
-            K = game_send(P->addr1, G, 'S');
-            if (K > 0)
+            K1 = read(P->addr1, buff, sizeof(buff));
+            if (!(K1 > 0))
+                break;
+            sscanf(buff, "%d-%d", &x, &y);
+            A = action(x, y, G);
+            if (A == 0)
             {
+                find_action(x, y, G);
+                game_send(P->addr1, G, '0');
+            }
+            if (A == 3)
+            {
+                game_send(P->addr1, G, 'C');
                 do
                 {
-                    K = read(P->addr1, buff, sizeof(buff));
-                    if (K > 0)
-                    {
-                        sscanf(buff, "%d-%d", &x, &y);
-                        A = action(x, y, G);
-                        if (A == 0)
-                        {
-                            find_action(x, y, G);
-                            game_send(P->addr1, G, '0');
-                        }
-                        if (A == 3)
-                            change(G, x, y, 'Q');
-                    }
-                    else
-                    {
-                        A = 1;
-                        game_send(P->addr2, G, 'V');
-                    }
-                } while (A == 0);
+                    K1 = read(P->addr1, buff, sizeof(buff));
+                    if (!(K1 > 0))
+                        break;
+                } while (buff[0] != 'S');
+                change(G, x, y, buff[2]);
             }
-            else
-            {
-                game_send(P->addr2, G, 'V');
-            }
-        }
-        else
-        {
-            game_send(P->addr1, G, 'V');
-        }
-        if (K > 0)
+
+        } while (A == 0);
+        if (K1 > 0)
         {
             player_swap(G, P);
             CM = checkmate(G);
         }
+        else
+            break;
     }
-    if (K > 0)
+    if ((K1 > 0) && (K2 > 0))
     {
         game_send(P->addr1, G, 'L');
         game_send(P->addr2, G, 'V');
     }
+    else if (K1 > 0)
+        game_send(P->addr1, G, 'V');
+    else if (K2 > 0)
+        game_send(P->addr2, G, 'V');
 
     free(G);
     free(P);
