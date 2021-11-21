@@ -52,7 +52,7 @@
         </constraints>
         <properties>
           <editable value="false"/>
-          <enabled value="false"/>
+          <enabled value="true"/>
           <text value="Twój kolor"/>
         </properties>
       </component>
@@ -64,7 +64,7 @@
         </constraints>
         <properties>
           <editable value="false"/>
-          <enabled value="false"/>
+          <enabled value="true"/>
           <text value="Wykonuje ruch"/>
         </properties>
       </component>

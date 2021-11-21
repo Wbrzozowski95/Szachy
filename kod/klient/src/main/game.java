@@ -45,7 +45,7 @@ public class game implements Runnable{
                         else this.ActivetextField.setText("Czarny");
                         break;
                     case 'C':
-                        choice C = new choice('W');
+                        choice C = new choice(B.getColor());
                         JOptionPane.showMessageDialog(null, C.getMain(), "Zmiana figury", JOptionPane.PLAIN_MESSAGE);
                         B.send(C.getSelect());
                         break;

@@ -17,7 +17,7 @@ public class choice {
             RRadioButton.setIcon(new ImageIcon(getClass().getResource("/images/W_ROOK.png")));
             BRadioButton.setIcon(new ImageIcon(getClass().getResource("/images/W_BISHOP.png")));
         }
-        if(C == 'B'){
+        else {
             QRadioButton.setIcon(new ImageIcon(getClass().getResource("/images/B_QUEEN.png")));
             HRadioButton.setIcon(new ImageIcon(getClass().getResource("/images/B_KNIGHT.png")));
             RRadioButton.setIcon(new ImageIcon(getClass().getResource("/images/B_ROOK.png")));

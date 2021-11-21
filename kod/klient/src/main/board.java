@@ -117,6 +117,10 @@ public class board extends JPanel {
         Color = color;
     }
 
+    public char getColor() {
+        return Color;
+    }
+
     public char getActive() {
         return Active;
     }
