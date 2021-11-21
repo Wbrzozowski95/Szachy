@@ -9,10 +9,10 @@ public class game implements Runnable{
     private JPanel menu;
     private JPanel boardpanel;
     private JPanel Chessboard;
-    private JTextPane TextPane1;
-    private JTextPane TextPane2;
     private JTextField ColortextField;
     private JTextField ActivetextField;
+    private JTextField twójKolorTextField;
+    private JTextField wykonujeRuchTextField;
     private board B;
 
     public game(Socket CS, JFrame F, JPanel P){
@@ -45,7 +45,9 @@ public class game implements Runnable{
                         else this.ActivetextField.setText("Czarny");
                         break;
                     case 'C':
-                        B.send("S-Q");
+                        choice C = new choice('W');
+                        JOptionPane.showMessageDialog(null, C.getMain(), "Zmiana figury", JOptionPane.PLAIN_MESSAGE);
+                        B.send(C.getSelect());
                         break;
                     case 'V':
                         play = false;
