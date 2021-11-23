@@ -57,6 +57,10 @@ public class game implements Runnable{
                         play = false;
                         JOptionPane.showMessageDialog(null,"Przegrałeś");
                         break;
+                    case 'R':
+                        play = false;
+                        JOptionPane.showMessageDialog(null,"Remis");
+                        break;
                 }
                 frame.repaint();
             } catch (IOException e) {

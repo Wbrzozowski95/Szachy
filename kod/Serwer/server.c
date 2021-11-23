@@ -117,8 +117,16 @@ void *ThreadBehavior(void *data)
     }
     if ((K1 > 0) && (K2 > 0))
     {
-        game_send(P->addr1, G, 'L');
-        game_send(P->addr2, G, 'V');
+        if (CM == 0)
+        {
+            game_send(P->addr1, G, 'R');
+            game_send(P->addr2, G, 'R');
+        }
+        else
+        {
+            game_send(P->addr1, G, 'L');
+            game_send(P->addr2, G, 'V');
+        }
     }
     else if (K1 > 0)
         game_send(P->addr1, G, 'V');

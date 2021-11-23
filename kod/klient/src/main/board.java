@@ -89,13 +89,11 @@ public class board extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        char f;
         g.drawImage(this.B,0,0,null);
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (this.chess[1][i][j] == 'a') g.drawImage(this.T,i*100,j*100,null);
-                f = this.chess[0][i][j];
-                switch (f) {
+                if (this.chess[1][i][j] != '0') g.drawImage(this.T,i*100,j*100,null);
+                switch (this.chess[0][i][j]) {
                     case 'p' -> g.drawImage(this.WF[0], i * 100, j * 100, null);
                     case 'r' -> g.drawImage(this.WF[1], i * 100, j * 100, null);
                     case 'b' -> g.drawImage(this.WF[2], i * 100, j * 100, null);

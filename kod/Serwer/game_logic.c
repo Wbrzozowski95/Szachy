@@ -10,6 +10,7 @@ void new_game(struct game *G)
     G->B_king[0] = 4;
     G->B_king[1] = 0;
     G->Player_symbol = 'W';
+    G->rule50 = 0;
     for (j = 0; j < 8; j++)
     {
         for (i = 0; i < 8; i++)
@@ -785,6 +786,37 @@ int king_action(int x, int y, struct game *G, int draw)
             A = 1;
         }
 
+        if (F == 'K')
+        {
+            if ((G->castling[0] == '1') && (is_safe(2, 0, G) == 1) && (is_safe(3, 0, G) == 1) && (is_safe(4, 0, G) == 1) && (G->board[0][1][0] == '0') && (G->board[0][2][0] == '0') && (G->board[0][3][0] == '0'))
+            {
+                if (draw > 0)
+                    G->board[1][2][0] = 's';
+                A = 1;
+            }
+            if ((G->castling[1] == '1') && (is_safe(4, 0, G) == 1) && (is_safe(5, 0, G) == 1) && (is_safe(6, 0, G) == 1) && (G->board[0][5][0] == '0') && (G->board[0][6][0] == '0'))
+            {
+                if (draw > 0)
+                    G->board[1][6][0] = 's';
+                A = 1;
+            }
+        }
+        if (F == 'k')
+        {
+            if ((G->castling[2] == '1') && (is_safe(2, 7, G) == 1) && (is_safe(3, 7, G) == 1) && (is_safe(3, 7, G) == 1) && (G->board[0][1][7] == '0') && (G->board[0][2][7] == '0') && (G->board[0][3][7] == '0'))
+            {
+                if (draw > 0)
+                    G->board[1][2][7] = 's';
+                A = 1;
+            }
+            if ((G->castling[3] == '1') && (is_safe(4, 7, G) == 1) && (is_safe(5, 7, G) == 1) && (is_safe(6, 7, G) == 1) && (G->board[0][5][7] == '0') && (G->board[0][6][7] == '0'))
+            {
+                if (draw > 0)
+                    G->board[1][6][7] = 's';
+                A = 1;
+            }
+        }
+
         G->board[0][x][y] = F;
     }
 
@@ -879,14 +911,14 @@ int action(int x, int y, struct game *G)
         if (y == 0)
         {
             G->board[0][4][0] = '0';
-            if (x == 0)
+            if (x == 2)
             {
                 G->board[0][0][0] = '0';
                 G->board[0][3][0] = 'R';
                 G->board[0][2][0] = 'K';
                 G->B_king[1] = 2;
             }
-            if (x == 7)
+            if (x == 6)
             {
                 G->board[0][7][0] = '0';
                 G->board[0][5][0] = 'R';
@@ -899,14 +931,14 @@ int action(int x, int y, struct game *G)
         if (y == 7)
         {
             G->board[0][4][7] = '0';
-            if (x == 0)
+            if (x == 2)
             {
                 G->board[0][0][7] = '0';
                 G->board[0][3][7] = 'r';
                 G->board[0][2][7] = 'k';
                 G->W_king[1] = 2;
             }
-            if (x == 7)
+            if (x == 6)
             {
                 G->board[0][7][7] = '0';
                 G->board[0][5][7] = 'r';
@@ -937,6 +969,10 @@ int action(int x, int y, struct game *G)
 
         if (((G->board[0][x][y] == 'p') && (y == 0)) || ((G->board[0][x][y] == 'P') && (y == 7)))
             A = A | 2;
+        if ((G->board[0][x][y] == 'p') || (G->board[0][x][y] == 'P'))
+            G->rule50 = 0;
+        else
+            G->rule50 += 1;
     }
 
     /*
@@ -952,7 +988,11 @@ int checkmate(struct game *G)
 
     int C = 0, i, j;
     if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 0)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 0)))
+    {
         C = C | 2;
+        G->rule50 = 0;
+    }
+
     for (j = 0; j < 8; j++)
     {
         for (i = 0; i < 8; i++)
@@ -964,6 +1004,9 @@ int checkmate(struct game *G)
             C = C | king_action(i, j, G, 0);
         }
     }
+
+    if (G->rule50 == 50)
+        C = 0;
 
     /*
     C=0 pat
@@ -980,5 +1023,5 @@ void change(struct game *G, int x, int y, char f)
     G->board[0][x][y] = f;
 
     if (G->Player_symbol == 'W')
-        G->board[0][x][y] =G->board[0][x][y] + 32; // zmiana na białą figure
+        G->board[0][x][y] = G->board[0][x][y] + 32; // zmiana na białą figure
 }

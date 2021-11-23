@@ -10,6 +10,7 @@ struct game
     char castling[4];    //sprawdzanie czy wierze wykonały ruch, ważne dla roszady
     int W_king[2];       //współrzędne białego króla
     int B_king[2];       //współrzędne czarnego króla
+    int rule50;
 };
 
 void new_game(struct game *G);
