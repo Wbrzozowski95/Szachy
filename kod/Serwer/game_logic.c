@@ -773,13 +773,13 @@ int king_action(int x, int y, struct game *G, int draw)
                 G->board[1][x + 1][y + 1] = 'a';
             A = 1;
         }
-        if ((x > 0) && (y < 7) && (is_safe(x - 1, y + 1, G) == 1) && ((G->board[0][x - 1][y + 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y + 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 1, y + 1, G) == 'W')))))
+        if ((x > 0) && (y < 7) && (is_safe(x - 1, y + 1, G) == 1) && ((G->board[0][x - 1][y + 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y + 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 1, y + 1, G) == 'W')))))
         {
             if (draw > 0)
                 G->board[1][x - 1][y + 1] = 'a';
             A = 1;
         }
-        if ((x > 0) && (y > 0) && (is_safe(x - 1, y - 1, G) == 1) && ((G->board[0][x - 1][y - 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y - 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 1, y - 1, G) == 'W')))))
+        if ((x > 0) && (y > 0) && (is_safe(x - 1, y - 1, G) == 1) && ((G->board[0][x - 1][y - 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y - 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 1, y - 1, G) == 'W')))))
         {
             if (draw > 0)
                 G->board[1][x - 1][y - 1] = 'a';
@@ -983,6 +983,23 @@ int action(int x, int y, struct game *G)
     return A;
 }
 
+void change(struct game *G, int x, int y, char f)
+{ // zamiana figury
+
+    G->board[0][x][y] = f;
+
+    if (G->Player_symbol == 'W')
+        G->board[0][x][y] = G->board[0][x][y] + 32; // zmiana na białą figure
+}
+
+int figure_count(int figures[5])
+{
+    if ((figures[0] > 0) || (figures[1] > 0) || (figures[2] > 1) || (figures[3] > 1) || (figures[4] > 0) || ((figures[2] > 0) && (figures[3] > 0)))
+        return 1;
+    else
+        return 0;
+}
+
 int checkmate(struct game *G)
 { //określenie czy aktywny gracz przegrał
 
@@ -992,20 +1009,70 @@ int checkmate(struct game *G)
         C = C | 2;
         G->rule50 = 0;
     }
+    int white[5] = {0, 0, 0, 0, 0}, black[5] = {0, 0, 0, 0, 0};
 
     for (j = 0; j < 8; j++)
     {
         for (i = 0; i < 8; i++)
         {
-            C = C | pawn_action(i, j, G, 0);
-            C = C | rook_action(i, j, G, 0);
-            C = C | bishop_action(i, j, G, 0);
-            C = C | knight_action(i, j, G, 0);
-            C = C | king_action(i, j, G, 0);
+            switch (G->board[0][i][j])
+            {
+            case 'p':
+                C = C | pawn_action(i, j, G, 0);
+                white[0] += 1;
+                break;
+            case 'r':
+                C = C | rook_action(i, j, G, 0);
+                white[1] += 1;
+                break;
+            case 'b':
+                C = C | bishop_action(i, j, G, 0);
+                white[2] += 1;
+                break;
+            case 'h':
+                C = C | knight_action(i, j, G, 0);
+                white[3] += 1;
+                break;
+            case 'q':
+                C = C | rook_action(i, j, G, 0);
+                C = C | bishop_action(i, j, G, 0);
+                white[4] += 1;
+                break;
+            case 'P':
+                C = C | pawn_action(i, j, G, 0);
+                black[0] += 1;
+                break;
+            case 'R':
+                C = C | rook_action(i, j, G, 0);
+                black[1] += 1;
+                break;
+            case 'B':
+                C = C | bishop_action(i, j, G, 0);
+                black[2] += 1;
+                break;
+            case 'H':
+                C = C | knight_action(i, j, G, 0);
+                black[3] += 1;
+                break;
+            case 'Q':
+                C = C | rook_action(i, j, G, 0);
+                C = C | bishop_action(i, j, G, 0);
+                black[4] += 1;
+                break;
+            case 'k':
+            case 'K':
+                C = C | king_action(i, j, G, 0);
+                break;
+            default:
+                break;
+            }
         }
     }
 
-    if (G->rule50 == 50)
+    if ((figure_count(white) == 0) && (figure_count(black) == 0))
+        C = 0;
+
+    if (G->rule50 >= 50)
         C = 0;
 
     /*
@@ -1015,13 +1082,4 @@ int checkmate(struct game *G)
     C=3 Check
     */
     return C;
-}
-
-void change(struct game *G, int x, int y, char f)
-{ // zamiana figury
-
-    G->board[0][x][y] = f;
-
-    if (G->Player_symbol == 'W')
-        G->board[0][x][y] = G->board[0][x][y] + 32; // zmiana na białą figure
 }
