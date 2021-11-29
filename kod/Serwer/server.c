@@ -126,6 +126,7 @@ void *ThreadBehavior(void *data)
         {
             game_send(P->addr1, G, 'L');
             game_send(P->addr2, G, 'V');
+
         }
     }
     else if (K1 > 0)

@@ -222,6 +222,14 @@ int is_safe(int x, int y, struct game *G)
     return S;
 }
 
+int is_king_safe(struct game *G)
+{
+    if (G->Player_symbol == 'W')
+        return is_safe(G->W_king[0], G->W_king[1], G);
+    else
+        return is_safe(G->B_king[0], G->B_king[1], G);
+}
+
 char figure_color(int x, int y, struct game *G)
 { //określenie koloru figury na polu (x,y)
     char P;
@@ -252,125 +260,133 @@ char figure_color(int x, int y, struct game *G)
     return P;
 }
 
+int your_figure(int x, int y, struct game *G)
+{
+    if (((G->Player_symbol == 'W') && (figure_color(x, y, G) == 'W')) || ((G->Player_symbol == 'B') && (figure_color(x, y, G) == 'B')))
+        return 1;
+    else if (((G->Player_symbol == 'W') && (figure_color(x, y, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x, y, G) == 'W')))
+        return -1;
+    else
+        return 0;
+}
+
 //znajdywanie ruchów i ataków figór
 
-int pawn_action(int x, int y, struct game *G, int draw)
+int w_pawn_action(int x, int y, struct game *G, int draw)
 {
-
     int A = 0;
     char F = G->board[0][x][y], S;
+    G->board[0][x][y] = '0';
 
-    if ((G->Player_symbol == 'W') && (F == 'p'))
+    if (G->board[0][x][y - 1] == '0')
     {
-        G->board[0][x][y] = '0';
-
-        if ((y > 0) && (G->board[0][x][y - 1] == '0'))
+        G->board[0][x][y - 1] = F;
+        if (is_safe(G->W_king[0], G->W_king[1], G) == 1)
         {
-            G->board[0][x][y - 1] = F;
+            if (draw > 0)
+                G->board[1][x][y - 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x][y - 1] = '0';
+
+        if ((y == 6) && (G->board[0][x][y - 2] == '0'))
+        {
+            G->board[0][x][y - 2] = F;
             if (is_safe(G->W_king[0], G->W_king[1], G) == 1)
             {
                 if (draw > 0)
-                    G->board[1][x][y - 1] = 'a';
+                    G->board[1][x][y - 2] = 'a';
                 A = 1;
             }
-            G->board[0][x][y - 1] = '0';
-
-            if ((y == 6) && (G->board[0][x][y - 2] == '0'))
-            {
-                G->board[0][x][y - 2] = F;
-                if (is_safe(G->W_king[0], G->W_king[1], G) == 1)
-                {
-                    if (draw > 0)
-                        G->board[1][x][y - 2] = 'a';
-                    A = 1;
-                }
-                G->board[0][x][y - 2] = '0';
-            }
+            G->board[0][x][y - 2] = '0';
         }
-
-        if ((y > 0) && (x > 0) && ((figure_color(x - 1, y - 1, G) == 'B') || (G->board[0][x - 1][y - 1] == 's')))
-        {
-            S = G->board[0][x - 1][y - 1];
-            G->board[0][x - 1][y - 1] = F;
-            if (is_safe(G->W_king[0], G->W_king[1], G) == 1)
-            {
-                if (draw > 0)
-                    G->board[1][x - 1][y - 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x - 1][y - 1] = S;
-        }
-        if ((y > 0) && (x < 7) && ((figure_color(x + 1, y - 1, G) == 'B') || (G->board[0][x + 1][y - 1] == 's')))
-        {
-            S = G->board[0][x + 1][y - 1];
-            G->board[0][x + 1][y - 1] = F;
-            if (is_safe(G->W_king[0], G->W_king[1], G) == 1)
-            {
-                if (draw > 0)
-                    G->board[1][x + 1][y - 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x + 1][y - 1] = S;
-        }
-
-        G->board[0][x][y] = F;
-    }
-    if ((G->Player_symbol == 'B') && (F == 'P'))
-    {
-        G->board[0][x][y] = '0';
-
-        if ((y < 7) && (G->board[0][x][y + 1] == '0'))
-        {
-            G->board[0][x][y + 1] = F;
-            if (is_safe(G->B_king[0], G->B_king[1], G) == 1)
-            {
-                if (draw > 0)
-                    G->board[1][x][y + 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x][y + 1] = '0';
-
-            if ((y == 1) && (G->board[0][x][y + 2] == '0'))
-            {
-                G->board[0][x][y + 2] = F;
-                if (is_safe(G->B_king[0], G->B_king[1], G) == 1)
-                {
-                    if (draw > 0)
-                        G->board[1][x][y + 2] = 'a';
-                    A = 1;
-                }
-                G->board[0][x][y + 2] = '0';
-            }
-        }
-
-        if ((y < 7) && (x > 0) && ((figure_color(x - 1, y + 1, G) == 'W') || (G->board[0][x - 1][y + 1] == 's')))
-        {
-            S = G->board[0][x - 1][y + 1];
-            G->board[0][x - 1][y + 1] = F;
-            if (is_safe(G->B_king[0], G->B_king[1], G) == 1)
-            {
-                if (draw > 0)
-                    G->board[1][x - 1][y + 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x - 1][y + 1] = S;
-        }
-        if ((y < 7) && (x < 7) && ((figure_color(x + 1, y + 1, G) == 'W') || (G->board[0][x + 1][y + 1] == 's')))
-        {
-            S = G->board[0][x + 1][y + 1];
-            G->board[0][x + 1][y + 1] = F;
-            if (is_safe(G->B_king[0], G->B_king[1], G) == 1)
-            {
-                if (draw > 0)
-                    G->board[1][x + 1][y + 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x + 1][y + 1] = S;
-        }
-
-        G->board[0][x][y] = F;
     }
 
+    if ((x > 0) && ((figure_color(x - 1, y - 1, G) == 'B') || (G->board[0][x - 1][y - 1] == 's')))
+    {
+        S = G->board[0][x - 1][y - 1];
+        G->board[0][x - 1][y - 1] = F;
+        if (is_safe(G->W_king[0], G->W_king[1], G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x - 1][y - 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x - 1][y - 1] = S;
+    }
+    if ((x < 7) && ((figure_color(x + 1, y - 1, G) == 'B') || (G->board[0][x + 1][y - 1] == 's')))
+    {
+        S = G->board[0][x + 1][y - 1];
+        G->board[0][x + 1][y - 1] = F;
+        if (is_safe(G->W_king[0], G->W_king[1], G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x + 1][y - 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x + 1][y - 1] = S;
+    }
+
+    G->board[0][x][y] = F;
+    return A;
+}
+
+int b_pawn_action(int x, int y, struct game *G, int draw)
+{
+    int A = 0;
+    char F = G->board[0][x][y], S;
+    G->board[0][x][y] = '0';
+
+    if (G->board[0][x][y + 1] == '0')
+    {
+        G->board[0][x][y + 1] = F;
+        if (is_safe(G->B_king[0], G->B_king[1], G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x][y + 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x][y + 1] = '0';
+
+        if ((y == 1) && (G->board[0][x][y + 2] == '0'))
+        {
+            G->board[0][x][y + 2] = F;
+            if (is_safe(G->B_king[0], G->B_king[1], G) == 1)
+            {
+                if (draw > 0)
+                    G->board[1][x][y + 2] = 'a';
+                A = 1;
+            }
+            G->board[0][x][y + 2] = '0';
+        }
+    }
+
+    if ((x > 0) && ((figure_color(x - 1, y + 1, G) == 'W') || (G->board[0][x - 1][y + 1] == 's')))
+    {
+        S = G->board[0][x - 1][y + 1];
+        G->board[0][x - 1][y + 1] = F;
+        if (is_safe(G->B_king[0], G->B_king[1], G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x - 1][y + 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x - 1][y + 1] = S;
+    }
+    if ((x < 7) && ((figure_color(x + 1, y + 1, G) == 'W') || (G->board[0][x + 1][y + 1] == 's')))
+    {
+        S = G->board[0][x + 1][y + 1];
+        G->board[0][x + 1][y + 1] = F;
+        if (is_safe(G->B_king[0], G->B_king[1], G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x + 1][y + 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x + 1][y + 1] = S;
+    }
+
+    G->board[0][x][y] = F;
     return A;
 }
 
@@ -380,113 +396,110 @@ int rook_action(int x, int y, struct game *G, int draw)
     int i, A = 0;
     char F = G->board[0][x][y], S;
 
-    if (((G->Player_symbol == 'W') && ((F == 'r') || (F == 'q'))) || ((G->Player_symbol == 'B') && ((F == 'R') || (F == 'Q'))))
+    G->board[0][x][y] = '0';
+
+    i = x + 1;
+    while ((i <= 7) && (G->board[0][i][y] == '0'))
     {
-        G->board[0][x][y] = '0';
-
-        i = x + 1;
-        while ((i <= 7) && (G->board[0][i][y] == '0'))
+        G->board[0][i][y] = F;
+        if (is_king_safe(G) == 1)
         {
-            G->board[0][i][y] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][y] = 'a';
-                A = 1;
-            }
-            G->board[0][i][y] = '0';
-            i++;
+            if (draw > 0)
+                G->board[1][i][y] = 'a';
+            A = 1;
         }
-        if ((i <= 7) && (((G->Player_symbol == 'W') && (figure_color(i, y, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(i, y, G) == 'W'))))
-        {
-            S = G->board[0][i][y];
-            G->board[0][i][y] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][y] = 'a';
-                A = 1;
-            }
-            G->board[0][i][y] = S;
-        }
-        i = y + 1;
-        while ((i <= 7) && (G->board[0][x][i] == '0'))
-        {
-            G->board[0][x][i] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x][i] = 'a';
-                A = 1;
-            }
-            G->board[0][x][i] = '0';
-            i++;
-        }
-        if ((i <= 7) && (((G->Player_symbol == 'W') && (figure_color(x, i, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x, i, G) == 'W'))))
-        {
-            S = G->board[0][x][i];
-            G->board[0][x][i] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x][i] = 'a';
-                A = 1;
-            }
-            G->board[0][x][i] = S;
-        }
-        i = x - 1;
-        while ((i >= 0) && (G->board[0][i][y] == '0'))
-        {
-            G->board[0][i][y] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][y] = 'a';
-                A = 1;
-            }
-            G->board[0][i][y] = '0';
-            i--;
-        }
-        if ((i >= 0) && (((G->Player_symbol == 'W') && (figure_color(i, y, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(i, y, G) == 'W'))))
-        {
-            S = G->board[0][i][y];
-            G->board[0][i][y] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][y] = 'a';
-                A = 1;
-            }
-            G->board[0][i][y] = S;
-        }
-        i = y - 1;
-        while ((i >= 0) && (G->board[0][x][i] == '0'))
-        {
-            G->board[0][x][i] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x][i] = 'a';
-                A = 1;
-            }
-            G->board[0][x][i] = '0';
-            i--;
-        }
-        if ((i >= 0) && (((G->Player_symbol == 'W') && (figure_color(x, i, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x, i, G) == 'W'))))
-        {
-            S = G->board[0][x][i];
-            G->board[0][x][i] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x][i] = 'a';
-                A = 1;
-            }
-            G->board[0][x][i] = S;
-        }
-
-        G->board[0][x][y] = F;
+        G->board[0][i][y] = '0';
+        i++;
     }
+    if ((i <= 7) && (your_figure(i, y, G) == -1))
+    {
+        S = G->board[0][i][y];
+        G->board[0][i][y] = F;
+        if (is_king_safe(G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][i][y] = 'a';
+            A = 1;
+        }
+        G->board[0][i][y] = S;
+    }
+    i = y + 1;
+    while ((i <= 7) && (G->board[0][x][i] == '0'))
+    {
+        G->board[0][x][i] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][x][i] = 'a';
+            A = 1;
+        }
+        G->board[0][x][i] = '0';
+        i++;
+    }
+    if ((i <= 7) && (your_figure(x, i, G) == -1))
+    {
+        S = G->board[0][x][i];
+        G->board[0][x][i] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][x][i] = 'a';
+            A = 1;
+        }
+        G->board[0][x][i] = S;
+    }
+    i = x - 1;
+    while ((i >= 0) && (G->board[0][i][y] == '0'))
+    {
+        G->board[0][i][y] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][y] = 'a';
+            A = 1;
+        }
+        G->board[0][i][y] = '0';
+        i--;
+    }
+    if ((i >= 0) && (your_figure(i, y, G) == -1))
+    {
+        S = G->board[0][i][y];
+        G->board[0][i][y] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][y] = 'a';
+            A = 1;
+        }
+        G->board[0][i][y] = S;
+    }
+    i = y - 1;
+    while ((i >= 0) && (G->board[0][x][i] == '0'))
+    {
+        G->board[0][x][i] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][x][i] = 'a';
+            A = 1;
+        }
+        G->board[0][x][i] = '0';
+        i--;
+    }
+    if ((i >= 0) && (your_figure(x, i, G) == -1))
+    {
+        S = G->board[0][x][i];
+        G->board[0][x][i] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][x][i] = 'a';
+            A = 1;
+        }
+        G->board[0][x][i] = S;
+    }
+
+    G->board[0][x][y] = F;
     return A;
 }
 
@@ -496,120 +509,117 @@ int bishop_action(int x, int y, struct game *G, int draw)
     int i, j, A = 0;
     char F = G->board[0][x][y], S;
 
-    if (((G->Player_symbol == 'W') && ((F == 'b') || (F == 'q'))) || ((G->Player_symbol == 'B') && ((F == 'B') || (F == 'Q'))))
+    G->board[0][x][y] = '0';
+    i = x + 1;
+    j = y - 1;
+    while ((i <= 7) && (j >= 0) && (G->board[0][i][j] == '0'))
     {
-        G->board[0][x][y] = '0';
-        i = x + 1;
-        j = y - 1;
-        while ((i <= 7) && (j >= 0) && (G->board[0][i][j] == '0'))
+        G->board[0][i][j] = F;
+        if (is_king_safe(G))
         {
-            G->board[0][i][j] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][j] = 'a';
-                A = 1;
-            }
-            G->board[0][i][j] = '0';
-            i++;
-            j--;
+            if (draw > 0)
+                G->board[1][i][j] = 'a';
+            A = 1;
         }
-        if ((i <= 7) && (j >= 0) && (((G->Player_symbol == 'W') && (figure_color(i, j, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(i, j, G) == 'W'))))
-        {
-            S = G->board[0][i][j];
-            G->board[0][i][j] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][j] = 'a';
-                A = 1;
-            }
-            G->board[0][i][j] = S;
-        }
-        i = x + 1;
-        j = y + 1;
-        while ((i <= 7) && (j <= 7) && (G->board[0][i][j] == '0'))
-        {
-            G->board[0][i][j] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][j] = 'a';
-                A = 1;
-            }
-            G->board[0][i][j] = '0';
-            i++;
-            j++;
-        }
-        if ((i <= 7) && (j <= 7) && (((G->Player_symbol == 'W') && (figure_color(i, j, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(i, j, G) == 'W'))))
-        {
-            S = G->board[0][i][j];
-            G->board[0][i][j] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][j] = 'a';
-                A = 1;
-            }
-            G->board[0][i][j] = S;
-        }
-        i = x - 1;
-        j = y + 1;
-        while ((i >= 0) && (j <= 7) && (G->board[0][i][j] == '0'))
-        {
-            G->board[0][i][j] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][j] = 'a';
-                A = 1;
-            }
-            G->board[0][i][j] = '0';
-            i--;
-            j++;
-        }
-        if ((i >= 0) && (j <= 7) && (((G->Player_symbol == 'W') && (figure_color(i, j, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(i, j, G) == 'W'))))
-        {
-            S = G->board[0][i][j];
-            G->board[0][i][j] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][j] = 'a';
-                A = 1;
-            }
-            G->board[0][i][j] = S;
-        }
-        i = x - 1;
-        j = y - 1;
-        while ((i >= 0) && (j >= 0) && (G->board[0][i][j] == '0'))
-        {
-            G->board[0][i][j] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][j] = 'a';
-                A = 1;
-            }
-            G->board[0][i][j] = '0';
-            i--;
-            j--;
-        }
-        if ((i >= 0) && (j >= 0) && (((G->Player_symbol == 'W') && (figure_color(i, j, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(i, j, G) == 'W'))))
-        {
-            S = G->board[0][i][j];
-            G->board[0][i][j] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][i][j] = 'a';
-                A = 1;
-            }
-            G->board[0][i][j] = S;
-        }
-
-        G->board[0][x][y] = F;
+        G->board[0][i][j] = '0';
+        i++;
+        j--;
     }
+    if ((i <= 7) && (j >= 0) && (your_figure(i, j, G) == -1))
+    {
+        S = G->board[0][i][j];
+        G->board[0][i][j] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][j] = 'a';
+            A = 1;
+        }
+        G->board[0][i][j] = S;
+    }
+    i = x + 1;
+    j = y + 1;
+    while ((i <= 7) && (j <= 7) && (G->board[0][i][j] == '0'))
+    {
+        G->board[0][i][j] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][j] = 'a';
+            A = 1;
+        }
+        G->board[0][i][j] = '0';
+        i++;
+        j++;
+    }
+    if ((i <= 7) && (j <= 7) && (your_figure(i, j, G)))
+    {
+        S = G->board[0][i][j];
+        G->board[0][i][j] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][j] = 'a';
+            A = 1;
+        }
+        G->board[0][i][j] = S;
+    }
+    i = x - 1;
+    j = y + 1;
+    while ((i >= 0) && (j <= 7) && (G->board[0][i][j] == '0'))
+    {
+        G->board[0][i][j] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][j] = 'a';
+            A = 1;
+        }
+        G->board[0][i][j] = '0';
+        i--;
+        j++;
+    }
+    if ((i >= 0) && (j <= 7) && (your_figure(i, j, G)))
+    {
+        S = G->board[0][i][j];
+        G->board[0][i][j] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][j] = 'a';
+            A = 1;
+        }
+        G->board[0][i][j] = S;
+    }
+    i = x - 1;
+    j = y - 1;
+    while ((i >= 0) && (j >= 0) && (G->board[0][i][j] == '0'))
+    {
+        G->board[0][i][j] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][j] = 'a';
+            A = 1;
+        }
+        G->board[0][i][j] = '0';
+        i--;
+        j--;
+    }
+    if ((i >= 0) && (j >= 0) && (your_figure(i, j, G) == -1))
+    {
+        S = G->board[0][i][j];
+        G->board[0][i][j] = F;
+        if (is_king_safe(G))
+        {
+            if (draw > 0)
+                G->board[1][i][j] = 'a';
+            A = 1;
+        }
+        G->board[0][i][j] = S;
+    }
+
+    G->board[0][x][y] = F;
     return A;
 }
 
@@ -619,108 +629,105 @@ int knight_action(int x, int y, struct game *G, int draw)
     int A = 0;
     char F = G->board[0][x][y], S;
 
-    if (((G->Player_symbol == 'W') && (F == 'h')) || ((G->Player_symbol == 'B') && (F == 'H')))
+    G->board[0][x][y] = '0';
+    S = G->board[0][x - 1][y - 2];
+    if ((x > 0) && (y > 1) && (your_figure(x - 1, y - 2, G) != 1))
     {
-        G->board[0][x][y] = '0';
-        S = G->board[0][x - 1][y - 2];
-        if ((x > 0) && (y > 1) && ((S == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y - 2, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 1, y - 2, G) == 'W')))))
+        G->board[0][x - 1][y - 2] = F;
+        if (is_king_safe(G) == 1)
         {
-            G->board[0][x - 1][y - 2] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x - 1][y - 2] = 'a';
-                A = 1;
-            }
-            G->board[0][x - 1][y - 2] = S;
+            if (draw > 0)
+                G->board[1][x - 1][y - 2] = 'a';
+            A = 1;
         }
-        S = G->board[0][x + 1][y - 2];
-        if ((x < 7) && (y > 1) && ((S == '0') || (((G->Player_symbol == 'W') && (figure_color(x + 1, y - 2, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 1, y - 2, G) == 'W')))))
-        {
-            G->board[0][x + 1][y - 2] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x + 1][y - 2] = 'a';
-                A = 1;
-            }
-            G->board[0][x + 1][y - 2] = S;
-        }
-        S = G->board[0][x + 2][y - 1];
-        if ((x < 6) && (y > 0) && ((S == '0') || (((G->Player_symbol == 'W') && (figure_color(x + 2, y - 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 2, y - 1, G) == 'W')))))
-        {
-            G->board[0][x + 2][y - 1] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x + 2][y - 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x + 2][y - 1] = S;
-        }
-        S = G->board[0][x + 2][y + 1];
-        if ((x < 6) && (y < 7) && ((S == '0') || (((G->Player_symbol == 'W') && (figure_color(x + 2, y + 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 2, y + 1, G) == 'W')))))
-        {
-            G->board[0][x + 2][y + 1] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x + 2][y + 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x + 2][y + 1] = S;
-        }
-        S = G->board[0][x + 1][y + 2];
-        if ((x < 7) && (y < 6) && ((S == '0') || (((G->Player_symbol == 'W') && (figure_color(x + 1, y + 2, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 1, y + 2, G) == 'W')))))
-        {
-            G->board[0][x + 1][y + 2] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x + 1][y + 2] = 'a';
-                A = 1;
-            }
-            G->board[0][x + 1][y + 2] = S;
-        }
-        S = G->board[0][x - 1][y + 2];
-        if ((x > 0) && (y < 6) && ((S == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y + 2, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 1, y + 2, G) == 'W')))))
-        {
-            G->board[0][x - 1][y + 2] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x - 1][y + 2] = 'a';
-                A = 1;
-            }
-            G->board[0][x - 1][y + 2] = S;
-        }
-        S = G->board[0][x - 2][y + 1];
-        if ((x > 1) && (y < 7) && ((S == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 2, y + 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 2, y + 1, G) == 'W')))))
-        {
-            G->board[0][x - 2][y + 1] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x - 2][y + 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x - 2][y + 1] = S;
-        }
-        S = G->board[0][x - 2][y - 1];
-        if ((x > 1) && (y > 0) && ((S == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 2, y - 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 2, y - 1, G) == 'W')))))
-        {
-            G->board[0][x - 2][y - 1] = F;
-            if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 1)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 1)))
-            {
-                if (draw > 0)
-                    G->board[1][x - 2][y - 1] = 'a';
-                A = 1;
-            }
-            G->board[0][x - 2][y - 1] = S;
-        }
-
-        G->board[0][x][y] = F;
+        G->board[0][x - 1][y - 2] = S;
     }
+    S = G->board[0][x + 1][y - 2];
+    if ((x < 7) && (y > 1) && (your_figure(x + 1, y - 2, G) != 1))
+    {
+        G->board[0][x + 1][y - 2] = F;
+        if (is_king_safe(G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x + 1][y - 2] = 'a';
+            A = 1;
+        }
+        G->board[0][x + 1][y - 2] = S;
+    }
+    S = G->board[0][x + 2][y - 1];
+    if ((x < 6) && (y > 0) && (your_figure(x + 2, y - 1, G) != 1))
+    {
+        G->board[0][x + 2][y - 1] = F;
+        if (is_king_safe(G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x + 2][y - 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x + 2][y - 1] = S;
+    }
+    S = G->board[0][x + 2][y + 1];
+    if ((x < 6) && (y < 7) && (your_figure(x + 2, y + 1, G) != 1))
+    {
+        G->board[0][x + 2][y + 1] = F;
+        if (is_king_safe(G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x + 2][y + 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x + 2][y + 1] = S;
+    }
+    S = G->board[0][x + 1][y + 2];
+    if ((x < 7) && (y < 6) && (your_figure(x + 1, y + 2, G) != 1))
+    {
+        G->board[0][x + 1][y + 2] = F;
+        if (is_king_safe(G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x + 1][y + 2] = 'a';
+            A = 1;
+        }
+        G->board[0][x + 1][y + 2] = S;
+    }
+    S = G->board[0][x - 1][y + 2];
+    if ((x > 0) && (y < 6) && (your_figure(x - 1, y + 2, G) != 1))
+    {
+        G->board[0][x - 1][y + 2] = F;
+        if (is_king_safe(G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x - 1][y + 2] = 'a';
+            A = 1;
+        }
+        G->board[0][x - 1][y + 2] = S;
+    }
+    S = G->board[0][x - 2][y + 1];
+    if ((x > 1) && (y < 7) && (your_figure(x - 2, y + 1, G) != 1))
+    {
+        G->board[0][x - 2][y + 1] = F;
+        if (is_king_safe(G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x - 2][y + 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x - 2][y + 1] = S;
+    }
+    S = G->board[0][x - 2][y - 1];
+    if ((x > 1) && (y > 0) && (your_figure(x - 2, y - 1, G) != 1))
+    {
+        G->board[0][x - 2][y - 1] = F;
+        if (is_king_safe(G) == 1)
+        {
+            if (draw > 0)
+                G->board[1][x - 2][y - 1] = 'a';
+            A = 1;
+        }
+        G->board[0][x - 2][y - 1] = S;
+    }
+
+    G->board[0][x][y] = F;
 
     return A;
 }
@@ -731,94 +738,90 @@ int king_action(int x, int y, struct game *G, int draw)
     int A = 0;
     char F = G->board[0][x][y];
 
-    if (((G->Player_symbol == 'W') && (F == 'k')) || ((G->Player_symbol == 'B') && (F == 'K')))
+    G->board[0][x][y] = '0';
+
+    if ((y > 0) && (is_safe(x, y - 1, G) == 1) && (your_figure(x, y - 1, G) != 1))
     {
-
-        G->board[0][x][y] = '0';
-
-        if ((y > 0) && (is_safe(x, y - 1, G) == 1) && ((G->board[0][x][y - 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x, y - 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x, y - 1, G) == 'W')))))
-        {
-            if (draw > 0)
-                G->board[1][x][y - 1] = 'a';
-            A = 1;
-        }
-        if ((x < 7) && (is_safe(x + 1, y, G) == 1) && ((G->board[0][x + 1][y] == '0') || (((G->Player_symbol == 'W') && (figure_color(x + 1, y, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 1, y, G) == 'W')))))
-        {
-            if (draw > 0)
-                G->board[1][x + 1][y] = 'a';
-            A = 1;
-        }
-        if ((y < 7) && (is_safe(x, y + 1, G) == 1) && ((G->board[0][x][y + 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x, y + 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x, y + 1, G) == 'W')))))
-        {
-            if (draw > 0)
-                G->board[1][x][y + 1] = 'a';
-            A = 1;
-        }
-        if ((x > 0) && (is_safe(x - 1, y, G) == 1) && ((G->board[0][x - 1][y] == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 1, y, G) == 'W')))))
-        {
-            if (draw > 0)
-                G->board[1][x - 1][y] = 'a';
-            A = 1;
-        }
-
-        if ((x < 7) && (y > 0) && (is_safe(x + 1, y - 1, G) == 1) && ((G->board[0][x + 1][y - 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x + 1, y - 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 1, y - 1, G) == 'W')))))
-        {
-            if (draw > 0)
-                G->board[1][x + 1][y - 1] = 'a';
-            A = 1;
-        }
-        if ((x < 7) && (y < 7) && (is_safe(x + 1, y + 1, G) == 1) && ((G->board[0][x + 1][y + 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x + 1, y + 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x + 1, y + 1, G) == 'W')))))
-        {
-            if (draw > 0)
-                G->board[1][x + 1][y + 1] = 'a';
-            A = 1;
-        }
-        if ((x > 0) && (y < 7) && (is_safe(x - 1, y + 1, G) == 1) && ((G->board[0][x - 1][y + 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y + 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 1, y + 1, G) == 'W')))))
-        {
-            if (draw > 0)
-                G->board[1][x - 1][y + 1] = 'a';
-            A = 1;
-        }
-        if ((x > 0) && (y > 0) && (is_safe(x - 1, y - 1, G) == 1) && ((G->board[0][x - 1][y - 1] == '0') || (((G->Player_symbol == 'W') && (figure_color(x - 1, y - 1, G) == 'B')) || ((G->Player_symbol == 'B') && (figure_color(x - 1, y - 1, G) == 'W')))))
-        {
-            if (draw > 0)
-                G->board[1][x - 1][y - 1] = 'a';
-            A = 1;
-        }
-
-        if (F == 'K')
-        {
-            if ((G->castling[0] == '1') && (is_safe(2, 0, G) == 1) && (is_safe(3, 0, G) == 1) && (is_safe(4, 0, G) == 1) && (G->board[0][1][0] == '0') && (G->board[0][2][0] == '0') && (G->board[0][3][0] == '0'))
-            {
-                if (draw > 0)
-                    G->board[1][2][0] = 's';
-                A = 1;
-            }
-            if ((G->castling[1] == '1') && (is_safe(4, 0, G) == 1) && (is_safe(5, 0, G) == 1) && (is_safe(6, 0, G) == 1) && (G->board[0][5][0] == '0') && (G->board[0][6][0] == '0'))
-            {
-                if (draw > 0)
-                    G->board[1][6][0] = 's';
-                A = 1;
-            }
-        }
-        if (F == 'k')
-        {
-            if ((G->castling[2] == '1') && (is_safe(2, 7, G) == 1) && (is_safe(3, 7, G) == 1) && (is_safe(3, 7, G) == 1) && (G->board[0][1][7] == '0') && (G->board[0][2][7] == '0') && (G->board[0][3][7] == '0'))
-            {
-                if (draw > 0)
-                    G->board[1][2][7] = 's';
-                A = 1;
-            }
-            if ((G->castling[3] == '1') && (is_safe(4, 7, G) == 1) && (is_safe(5, 7, G) == 1) && (is_safe(6, 7, G) == 1) && (G->board[0][5][7] == '0') && (G->board[0][6][7] == '0'))
-            {
-                if (draw > 0)
-                    G->board[1][6][7] = 's';
-                A = 1;
-            }
-        }
-
-        G->board[0][x][y] = F;
+        if (draw > 0)
+            G->board[1][x][y - 1] = 'a';
+        A = 1;
     }
+    if ((x < 7) && (is_safe(x + 1, y, G) == 1) && (your_figure(x + 1, y, G) != 1))
+    {
+        if (draw > 0)
+            G->board[1][x + 1][y] = 'a';
+        A = 1;
+    }
+    if ((y < 7) && (is_safe(x, y + 1, G) == 1) && (your_figure(x, y + 1, G) != 1))
+    {
+        if (draw > 0)
+            G->board[1][x][y + 1] = 'a';
+        A = 1;
+    }
+    if ((x > 0) && (is_safe(x - 1, y, G) == 1) && (your_figure(x - 1, y, G) != 1))
+    {
+        if (draw > 0)
+            G->board[1][x - 1][y] = 'a';
+        A = 1;
+    }
+
+    if ((x < 7) && (y > 0) && (is_safe(x + 1, y - 1, G) == 1) && (your_figure(x + 1, y - 1, G) != 1))
+    {
+        if (draw > 0)
+            G->board[1][x + 1][y - 1] = 'a';
+        A = 1;
+    }
+    if ((x < 7) && (y < 7) && (is_safe(x + 1, y + 1, G) == 1) && (your_figure(x + 1, y + 1, G) != 1))
+    {
+        if (draw > 0)
+            G->board[1][x + 1][y + 1] = 'a';
+        A = 1;
+    }
+    if ((x > 0) && (y < 7) && (is_safe(x - 1, y + 1, G) == 1) && (your_figure(x - 1, y + 1, G) != 1))
+    {
+        if (draw > 0)
+            G->board[1][x - 1][y + 1] = 'a';
+        A = 1;
+    }
+    if ((x > 0) && (y > 0) && (is_safe(x - 1, y - 1, G) == 1) && (your_figure(x - 1, y - 1, G) != 1))
+    {
+        if (draw > 0)
+            G->board[1][x - 1][y - 1] = 'a';
+        A = 1;
+    }
+
+    if (F == 'K')
+    {
+        if ((G->castling[0] == '1') && (is_safe(2, 0, G) == 1) && (is_safe(3, 0, G) == 1) && (is_safe(4, 0, G) == 1) && (G->board[0][1][0] == '0') && (G->board[0][2][0] == '0') && (G->board[0][3][0] == '0'))
+        {
+            if (draw > 0)
+                G->board[1][2][0] = 's';
+            A = 1;
+        }
+        if ((G->castling[1] == '1') && (is_safe(4, 0, G) == 1) && (is_safe(5, 0, G) == 1) && (is_safe(6, 0, G) == 1) && (G->board[0][5][0] == '0') && (G->board[0][6][0] == '0'))
+        {
+            if (draw > 0)
+                G->board[1][6][0] = 's';
+            A = 1;
+        }
+    }
+    if (F == 'k')
+    {
+        if ((G->castling[2] == '1') && (is_safe(2, 7, G) == 1) && (is_safe(3, 7, G) == 1) && (is_safe(3, 7, G) == 1) && (G->board[0][1][7] == '0') && (G->board[0][2][7] == '0') && (G->board[0][3][7] == '0'))
+        {
+            if (draw > 0)
+                G->board[1][2][7] = 's';
+            A = 1;
+        }
+        if ((G->castling[3] == '1') && (is_safe(4, 7, G) == 1) && (is_safe(5, 7, G) == 1) && (is_safe(6, 7, G) == 1) && (G->board[0][5][7] == '0') && (G->board[0][6][7] == '0'))
+        {
+            if (draw > 0)
+                G->board[1][6][7] = 's';
+            A = 1;
+        }
+    }
+
+    G->board[0][x][y] = F;
 
     return A;
 }
@@ -830,38 +833,38 @@ void find_action(int x, int y, struct game *G)
     G->Y = y;
     clear_board(1, G);
 
-    char F = G->board[0][x][y];
-
-    switch (F)
+    if (your_figure(x, y, G) == 1)
     {
-    case 'p':
-    case 'P':
-        pawn_action(x, y, G, 1);
-        break;
-    case 'r':
-    case 'R':
-        rook_action(x, y, G, 1);
-        break;
-    case 'b':
-    case 'B':
-        bishop_action(x, y, G, 1);
-        break;
-    case 'h':
-    case 'H':
-        knight_action(x, y, G, 1);
-        break;
-    case 'q':
-    case 'Q':
-        rook_action(x, y, G, 1);
-        bishop_action(x, y, G, 1);
-        break;
-    case 'k':
-    case 'K':
-        king_action(x, y, G, 1);
-        break;
-
-    default:
-        break;
+        switch (G->board[0][x][y])
+        {
+        case 'p':
+            w_pawn_action(x, y, G, 1);
+            break;
+        case 'P':
+            b_pawn_action(x, y, G, 1);
+            break;
+        case 'r':
+        case 'R':
+            rook_action(x, y, G, 1);
+            break;
+        case 'b':
+        case 'B':
+            bishop_action(x, y, G, 1);
+            break;
+        case 'h':
+        case 'H':
+            knight_action(x, y, G, 1);
+            break;
+        case 'q':
+        case 'Q':
+            rook_action(x, y, G, 1);
+            bishop_action(x, y, G, 1);
+            break;
+        case 'k':
+        case 'K':
+            king_action(x, y, G, 1);
+            break;
+        }
     }
 }
 
@@ -1004,7 +1007,7 @@ int checkmate(struct game *G)
 { //określenie czy aktywny gracz przegrał
 
     int C = 0, i, j;
-    if (((G->Player_symbol == 'W') && (is_safe(G->W_king[0], G->W_king[1], G) == 0)) || ((G->Player_symbol == 'B') && (is_safe(G->B_king[0], G->B_king[1], G) == 0)))
+    if (is_king_safe(G) == 0)
     {
         C = C | 2;
         G->rule50 = 0;
@@ -1015,56 +1018,59 @@ int checkmate(struct game *G)
     {
         for (i = 0; i < 8; i++)
         {
-            switch (G->board[0][i][j])
+            if (your_figure(i, j, G) == 1)
             {
-            case 'p':
-                C = C | pawn_action(i, j, G, 0);
-                white[0] += 1;
-                break;
-            case 'r':
-                C = C | rook_action(i, j, G, 0);
-                white[1] += 1;
-                break;
-            case 'b':
-                C = C | bishop_action(i, j, G, 0);
-                white[2] += 1;
-                break;
-            case 'h':
-                C = C | knight_action(i, j, G, 0);
-                white[3] += 1;
-                break;
-            case 'q':
-                C = C | rook_action(i, j, G, 0);
-                C = C | bishop_action(i, j, G, 0);
-                white[4] += 1;
-                break;
-            case 'P':
-                C = C | pawn_action(i, j, G, 0);
-                black[0] += 1;
-                break;
-            case 'R':
-                C = C | rook_action(i, j, G, 0);
-                black[1] += 1;
-                break;
-            case 'B':
-                C = C | bishop_action(i, j, G, 0);
-                black[2] += 1;
-                break;
-            case 'H':
-                C = C | knight_action(i, j, G, 0);
-                black[3] += 1;
-                break;
-            case 'Q':
-                C = C | rook_action(i, j, G, 0);
-                C = C | bishop_action(i, j, G, 0);
-                black[4] += 1;
-                break;
-            case 'k':
-            case 'K':
-                C = C | king_action(i, j, G, 0);
-                break;
-            default:
-                break;
+                switch (G->board[0][i][j])
+                {
+                case 'p':
+                    C = C | w_pawn_action(i, j, G, 0);
+                    white[0] += 1;
+                    break;
+                case 'r':
+                    C = C | rook_action(i, j, G, 0);
+                    white[1] += 1;
+                    break;
+                case 'b':
+                    C = C | bishop_action(i, j, G, 0);
+                    white[2] += 1;
+                    break;
+                case 'h':
+                    C = C | knight_action(i, j, G, 0);
+                    white[3] += 1;
+                    break;
+                case 'q':
+                    C = C | rook_action(i, j, G, 0);
+                    C = C | bishop_action(i, j, G, 0);
+                    white[4] += 1;
+                    break;
+                case 'P':
+                    C = C | b_pawn_action(i, j, G, 0);
+                    black[0] += 1;
+                    break;
+                case 'R':
+                    C = C | rook_action(i, j, G, 0);
+                    black[1] += 1;
+                    break;
+                case 'B':
+                    C = C | bishop_action(i, j, G, 0);
+                    black[2] += 1;
+                    break;
+                case 'H':
+                    C = C | knight_action(i, j, G, 0);
+                    black[3] += 1;
+                    break;
+                case 'Q':
+                    C = C | rook_action(i, j, G, 0);
+                    C = C | bishop_action(i, j, G, 0);
+                    black[4] += 1;
+                    break;
+                case 'k':
+                case 'K':
+                    C = C | king_action(i, j, G, 0);
+                    break;
+                default:
+                    break;
+                }
             }
         }
     }
